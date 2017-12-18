@@ -49,7 +49,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   float vy = x_(3);
 
   float pxys = std::sqrt(px*px + py*py);
-  float theta = std::atan(py/px);
+  float theta = std::atan2(py, px);
   while (theta > M_PI) {
     theta -= 2 * M_PI;
   }
@@ -65,6 +65,24 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   h << pxys, theta, (px*vx + py*vy) / pxys;
 
   VectorXd y = z - h;
+
+  theta = y(1);
+
+  while (theta > M_PI) {
+    theta -= 2 * M_PI;
+  }
+
+  while (theta < -M_PI) {
+    theta += 2 * M_PI;
+  }
+
+  if (theta < -M_PI || theta > M_PI) {
+    std::cout << "Error theta out of range: " << theta << std::endl;
+    exit(-1);
+  }
+
+  y(1) = theta;
+
   MatrixXd S = H_ * P_ * H_.transpose() + R_;
   MatrixXd K = P_ * H_.transpose() * S.inverse();
 
